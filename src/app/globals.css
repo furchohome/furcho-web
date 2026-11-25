@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --furcho-brown: #633719;
+    --furcho-dark-brown: #3B2418;
+    --furcho-gold: #C58B45;
+    --furcho-cream: #FAF5ED;
+    --furcho-beige: #EFE3D4;
+    --furcho-text: #29221D;
+  }
+
+  html {
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  body {
+    background-color: #FAF5ED;
+    color: #29221D;
+    font-family: var(--font-inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Body copy, labels & general content -> Inter */
+  p, li, label, input, textarea, select, td, dd, dt {
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  /* Headings -> Poppins */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-poppins), system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Buttons -> Poppins */
+  button, [type="button"], [type="submit"], [role="button"] {
+    font-family: var(--font-poppins), system-ui, sans-serif;
+    font-weight: 600;
+  }
+
+  /* Navigation -> Poppins */
+  header nav a, aside nav a, header nav button {
+    font-family: var(--font-poppins), system-ui, sans-serif;
+    font-weight: 500;
+  }
+}
+
+@layer components {
+  /* Reusable typography styles */
+  .text-heading { font-family: var(--font-poppins), system-ui, sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+  .text-nav     { font-family: var(--font-poppins), system-ui, sans-serif; font-weight: 500; }
+  .text-button  { font-family: var(--font-poppins), system-ui, sans-serif; font-weight: 600; }
+  .text-price   { font-family: var(--font-poppins), system-ui, sans-serif; font-weight: 700; }
+  .text-body    { font-family: var(--font-inter), system-ui, sans-serif; font-weight: 400; }
+
+  /* Links styled as buttons / CTAs, product titles and prices use Poppins.
+     Heavy-weight utility text in this project is used for prices, titles and CTAs. */
+  .font-extrabold, .font-black {
+    font-family: var(--font-poppins), system-ui, sans-serif;
+  }
+  a.rounded-xl.font-bold, a.rounded-full.font-bold, a.rounded-xl.font-extrabold, a.rounded-full.font-extrabold {
+    font-family: var(--font-poppins), system-ui, sans-serif;
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
