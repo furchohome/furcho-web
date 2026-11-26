@@ -75,11 +75,11 @@ export function ProductDetailClient({
   }, [product, effectivePricePaise]);
 
   const handleAddToCart = () => {
-    addItem(product, quantity, selectedVariant);
+    addItem(product, quantity, selectedVariant, { openDrawer: true });
   };
 
   const handleOrderNow = () => {
-    addItem(product, quantity, selectedVariant);
+    addItem(product, quantity, selectedVariant, { openDrawer: false });
     router.push("/checkout");
   };
 
@@ -242,7 +242,10 @@ export function ProductDetailClient({
 
               {product.slug === settings.featured_product_slug && (
                 <div className="pt-1">
-                  <CountdownTimer endDateIso={settings.promo_countdown_end} />
+                  <CountdownTimer
+                    endDateIso={settings.promo_countdown_end}
+                    cycleHours={settings.promo_countdown_hours}
+                  />
                 </div>
               )}
             </div>
@@ -472,7 +475,7 @@ export function ProductDetailClient({
               View All →
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 items-stretch">
             {relatedProducts.slice(0, 4).map((rel) => (
               <ProductCard
                 key={rel.id}

@@ -2,14 +2,27 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { CartItem, Product, ProductVariant } from "@/types/database";
-import { useToast } from "./ToastProvider";
 import { trackMetaEvent } from "@/components/tracking/MetaPixel";
+import { CartDrawer } from "@/components/storefront/CartDrawer";
+
+interface AddItemOptions {
+  openDrawer?: boolean;
+}
 
 interface CartContextValue {
   items: CartItem[];
   totalItems: number;
   subtotalPaise: number;
-  addItem: (product: Product, quantity?: number, variant?: ProductVariant | null) => void;
+  isCartDrawerOpen: boolean;
+  openCartDrawer: () => void;
+  closeCartDrawer: () => void;
+  toggleCartDrawer: () => void;
+  addItem: (
+    product: Product,
+    quantity?: number,
+    variant?: ProductVariant | null,
+    options?: AddItemOptions
+  ) => void;
   removeItem: (productId: string, variantId?: string | null) => void;
   updateQuantity: (productId: string, quantity: number, variantId?: string | null) => void;
   clearCart: () => void;
@@ -21,7 +34,11 @@ const CART_STORAGE_KEY = "furcho_shopping_cart_v1";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  const toast = useToast();
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+
+  const openCartDrawer = () => setIsCartDrawerOpen(true);
+  const closeCartDrawer = () => setIsCartDrawerOpen(false);
+  const toggleCartDrawer = () => setIsCartDrawerOpen((prev) => !prev);
 
   useEffect(() => {
     try {
@@ -47,7 +64,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, hydrated]);
 
-  const addItem = (product: Product, quantity = 1, variant?: ProductVariant | null) => {
+  const addItem = (
+    product: Product,
+    quantity = 1,
+    variant?: ProductVariant | null,
+    options?: AddItemOptions
+  ) => {
     const unitPrice = variant?.price_override_paise ?? product.selling_price_paise;
     const primaryImage =
       product.images.find((img) => img.is_primary)?.image_url ||
@@ -90,7 +112,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       currency: "INR",
     });
 
-    toast.success("Added to Cart", `${product.name} (${quantity}x) added to your shopping bag.`);
+    // Open Cart Drawer instead of toast notification
+    if (options?.openDrawer !== false) {
+      setIsCartDrawerOpen(true);
+    }
   };
 
   const removeItem = (productId: string, variantId?: string | null) => {
@@ -99,7 +124,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         (i) => !(i.product_id === productId && (i.variant_id || null) === (variantId || null))
       )
     );
-    toast.info("Removed from Cart", "Item has been removed from your cart.");
   };
 
   const updateQuantity = (productId: string, quantity: number, variantId?: string | null) => {
@@ -133,6 +157,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         items,
         totalItems,
         subtotalPaise,
+        isCartDrawerOpen,
+        openCartDrawer,
+        closeCartDrawer,
+        toggleCartDrawer,
         addItem,
         removeItem,
         updateQuantity,
@@ -140,6 +168,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      <CartDrawer />
     </CartContext.Provider>
   );
 }

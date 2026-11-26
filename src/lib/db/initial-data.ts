@@ -24,8 +24,9 @@ export interface FurchoDatabaseState {
   quotations: Quotation[];
 }
 
-// Compute a real promotional end timestamp ~2 days 12 hours 45 mins from initial seed
-const twoDaysFromNow = new Date(Date.now() + (2 * 24 * 60 + 12 * 60 + 45) * 60 * 1000).toISOString();
+// Compute tonight's midnight timestamp for daily recurring promotional countdown
+const tonightMidnight = new Date();
+tonightMidnight.setHours(24, 0, 0, 0);
 
 export const INITIAL_DB_STATE: FurchoDatabaseState = {
   store_sections: [
@@ -56,7 +57,8 @@ export const INITIAL_DB_STATE: FurchoDatabaseState = {
     announcement_enabled: true,
     featured_product_slug: "foldable-wall-mounted-ironing-table",
     promo_price_paise: 299900,
-    promo_countdown_end: twoDaysFromNow,
+    promo_countdown_end: tonightMidnight.toISOString(),
+    promo_countdown_hours: 24,
     whatsapp_number: "919876543210",
     support_phone: "+91 98765 43210",
     support_email: "hello@furcho.in",
@@ -64,8 +66,8 @@ export const INITIAL_DB_STATE: FurchoDatabaseState = {
     footer_tagline:
       "FURNITURE FOR A BETTER LIVING — Thoughtful furniture and smart home solutions for modern living in Kerala.",
     address_line: "Furcho Furniture Studio, NH-66 Bypass, Kozhikode, Kerala, India - 673016",
-    hero_bg_image: "/images/products/ironing-table-hero-bg.jpg",
-    hero_mobile_image: "/images/products/ironing-table-hero-mobile.jpg",
+    hero_bg_image: "https://res.cloudinary.com/wxyihfmb/image/upload/v1795667518/furcho/banners/acbp59wzgaibwe9kavbf.webp",
+    hero_mobile_image: "https://res.cloudinary.com/wxyihfmb/image/upload/v1795667436/furcho/banners/y5jf9j4usnibhxhlthzn.webp",
     updated_at: new Date().toISOString(),
   },
 
@@ -749,8 +751,8 @@ export const INITIAL_DB_STATE: FurchoDatabaseState = {
       cta_primary_link: "/products/foldable-wall-mounted-ironing-table",
       cta_secondary_text: "View Details",
       cta_secondary_link: "/products/foldable-wall-mounted-ironing-table",
-      image_url: "/images/products/ironing-table-hero-bg.jpg",
-      mobile_image_url: "/images/products/ironing-table-hero-mobile.jpg",
+      image_url: "https://res.cloudinary.com/wxyihfmb/image/upload/v1795667518/furcho/banners/acbp59wzgaibwe9kavbf.webp",
+      mobile_image_url: "https://res.cloudinary.com/wxyihfmb/image/upload/v1795667436/furcho/banners/y5jf9j4usnibhxhlthzn.webp",
       display_order: 1,
       is_active: true,
       created_at: "2026-11-01T10:00:00Z",

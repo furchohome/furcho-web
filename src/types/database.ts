@@ -298,6 +298,7 @@ export interface SiteSettings {
   featured_product_slug: string;
   promo_price_paise: number;
   promo_countdown_end: string | null;
+  promo_countdown_hours?: number;
   whatsapp_number: string;
   support_phone: string;
   support_email: string;

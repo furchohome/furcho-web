@@ -19,6 +19,7 @@ import { INITIAL_DB_STATE } from "@/lib/db/initial-data";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
+import { ModernSelect } from "@/components/ui/ModernSelect";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Enquiry, StoreSectionCode } from "@/types/database";
 import { trackMetaEvent } from "@/components/tracking/MetaPixel";
@@ -300,16 +301,13 @@ function CustomEnquiryFormContent() {
               <label className="block text-xs font-bold uppercase tracking-wider text-[#29221D] mb-1.5">
                 Enquiry Category *
               </label>
-              <select
-                {...register("enquiry_category")}
-                className="w-full rounded-xl border border-[#D8C7B4] bg-[#FAF5ED]/60 px-3.5 py-2.5 text-sm focus:border-[#633719] focus:outline-none"
-              >
-                {categoryOptions.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              <ModernSelect
+                options={categoryOptions.map((cat) => ({ value: cat, label: cat }))}
+                value={watch("enquiry_category")}
+                onChange={(val) => setValue("enquiry_category", val)}
+                className="w-full"
+                isPremium={activeSection === "PREMIUM"}
+              />
             </div>
 
             {/* Product Reference */}

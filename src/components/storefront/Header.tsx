@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -72,13 +72,39 @@ const PREMIUM_NAV = [
 export function Header({ settings, variant = "EVERYDAY" }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { totalItems } = useCart();
+  const { totalItems, openCartDrawer } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
+
   const isPremiumMode = variant === "PREMIUM" || pathname.startsWith("/premium");
+
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+    updateHeaderHeight();
+    window.addEventListener("resize", updateHeaderHeight);
+    return () => window.removeEventListener("resize", updateHeaderHeight);
+  }, [settings.announcement_enabled, searchOpen]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +114,7 @@ export function Header({ settings, variant = "EVERYDAY" }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header ref={headerRef} className="sticky top-0 z-50 w-full">
       {/* 1. Top Announcement Bar (Configurable from Admin Dashboard) */}
       {settings.announcement_enabled && settings.announcement_text && (
         <div className="bg-[#3B2418] text-[#FAF5ED] text-xs py-2 px-4 border-b border-[#633719]/40">
@@ -306,9 +332,10 @@ export function Header({ settings, variant = "EVERYDAY" }: HeaderProps) {
               <User className="w-5 h-5" />
             </Link>
 
-            <Link
-              href="/cart"
-              className={`relative p-2 rounded-xl transition ${
+            <button
+              type="button"
+              onClick={openCartDrawer}
+              className={`relative p-2 rounded-xl transition cursor-pointer ${
                 isPremiumMode
                   ? "hover:bg-[#3B2418] text-[#EFE3D4]"
                   : "hover:bg-[#EFE3D4]/70 text-[#29221D]"
@@ -319,7 +346,7 @@ export function Header({ settings, variant = "EVERYDAY" }: HeaderProps) {
               <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#633719] px-1 text-[10px] font-bold text-white shadow-xs border border-[#FAF5ED]">
                 {totalItems}
               </span>
-            </Link>
+            </button>
 
             {/* Mobile Hamburger Button */}
             <button
@@ -364,49 +391,115 @@ export function Header({ settings, variant = "EVERYDAY" }: HeaderProps) {
 
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#FAF5ED] border-b border-[#EFE3D4] px-4 pt-3 pb-6 space-y-3 shadow-elevated">
-          <div className="flex flex-col space-y-1">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#6E5D52] px-2 pt-1">
-              Everyday Living Storefront
-            </p>
-            {EVERYDAY_NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-xl px-3 py-2.5 text-sm font-semibold text-[#29221D] hover:bg-[#EFE3D4]/60"
-              >
-                {item.label}
-              </Link>
-            ))}
+        <div
+          style={{ top: `${headerHeight}px`, height: `calc(100dvh - ${headerHeight}px)` }}
+          className="lg:hidden fixed inset-x-0 bottom-0 bg-[#FAF5ED] z-50 flex flex-col justify-between px-5 pt-4 pb-6 overflow-y-auto shadow-elevated"
+        >
+          {/* Top Links Section */}
+          <div className="space-y-4">
+            {!isPremiumMode ? (
+              // 1. Everyday Living Menu: Everyday links + 1 single Premium Gateway Card
+              <>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#6E5D52] px-2 pt-1">
+                    Everyday Living
+                  </p>
+                  {EVERYDAY_NAV.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                          isActive
+                            ? "bg-[#EFE3D4] text-[#3B2418] font-bold"
+                            : "text-[#29221D] hover:bg-[#EFE3D4]/60"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Single Premium Living Gateway Card */}
+                <div className="pt-3 border-t border-[#EFE3D4]">
+                  <Link
+                    href="/premium"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-[#2A1810] to-[#452817] p-4 text-white shadow-soft transition hover:opacity-95"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#E5B869] uppercase tracking-wider">
+                        <Crown className="w-3.5 h-3.5" />
+                        <span>Furcho Premium Living</span>
+                      </div>
+                      <p className="text-xs text-[#E8D6C3]">
+                        Explore solid wood &amp; bespoke architectural furniture
+                      </p>
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#C58B45]/20 text-[#E5B869] border border-[#C58B45]/40 shrink-0 ml-2">
+                      <ArrowUpRight className="w-4 h-4" />
+                    </div>
+                  </Link>
+                </div>
+              </>
+            ) : (
+              // 2. Premium Living Menu: ONLY Premium links + 1 single Everyday Gateway Link
+              <>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#C58B45] px-2 pt-1 flex items-center gap-1.5">
+                    <Crown className="w-3.5 h-3.5" />
+                    <span>Premium Living Collection</span>
+                  </p>
+                  {PREMIUM_NAV.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                          isActive
+                            ? "bg-[#EFE3D4] text-[#3B2418] font-bold"
+                            : "text-[#29221D] hover:bg-[#EFE3D4]/60"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Single Everyday Store Link */}
+                <div className="pt-3 border-t border-[#EFE3D4]">
+                  <Link
+                    href="/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between rounded-xl bg-white border border-[#DFCBB3] px-4 py-3 text-sm font-bold text-[#633719] hover:bg-[#EFE3D4]/40 shadow-2xs"
+                  >
+                    <span>← Switch to Everyday Store</span>
+                    <ArrowUpRight className="w-4 h-4 text-[#8C6C50]" />
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
 
-          <div className="border-t border-[#EFE3D4] pt-3 flex flex-col space-y-1">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#C58B45] px-2">
-              Premium Living Storefront
-            </p>
-            {PREMIUM_NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-xl px-3 py-2 text-sm font-semibold text-[#633719] hover:bg-[#EFE3D4]/60 flex items-center justify-between"
-              >
-                <span>{item.label}</span>
-                <ArrowUpRight className="w-4 h-4 text-[#C58B45]" />
-              </Link>
-            ))}
-          </div>
-
-          <div className="border-t border-[#EFE3D4] pt-3">
-            <Link
-              href="/cart"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#633719] px-4 py-3 text-center text-sm font-bold text-white hover:bg-[#3B2418] transition shadow-card"
+          {/* Bottom Pinned Cart Button */}
+          <div className="mt-auto pt-4 border-t border-[#EFE3D4]">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                openCartDrawer();
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#633719] px-4 py-3.5 text-center text-sm font-bold text-white hover:bg-[#3B2418] transition shadow-card cursor-pointer"
             >
               <ShoppingCart className="w-4 h-4" />
               <span>View Cart ({totalItems})</span>
-            </Link>
+            </button>
           </div>
         </div>
       )}

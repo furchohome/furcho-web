@@ -2,9 +2,10 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, ArrowUpRight, Sparkles } from "lucide-react";
+import { Search, ChevronRight, X, Sparkles, Filter } from "lucide-react";
 import { Category, Product } from "@/types/database";
 import { ProductCard } from "./ProductCard";
+import { ModernSelect } from "@/components/ui/ModernSelect";
 
 interface CategoryListingClientProps {
   category: Category;
@@ -13,6 +14,25 @@ interface CategoryListingClientProps {
   initialSearch?: string;
   isPremium?: boolean;
 }
+
+const PRICE_TIERS = [
+  { id: "all", label: "All Prices", min: 0, max: Infinity },
+  { id: "under-2500", label: "Under ₹2,500", min: 0, max: 2500 },
+  { id: "2500-5000", label: "₹2,500 – ₹5,000", min: 2500, max: 5000 },
+  { id: "above-5000", label: "Above ₹5,000", min: 5000, max: Infinity },
+];
+
+const PRICE_OPTIONS = PRICE_TIERS.map((tier) => ({
+  value: tier.id,
+  label: tier.label,
+}));
+
+const SORT_OPTIONS = [
+  { value: "featured", label: "Featured" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "newest", label: "Newest First" },
+];
 
 export function CategoryListingClient({
   category,
@@ -25,20 +45,25 @@ export function CategoryListingClient({
     initialSubcategory || "ALL"
   );
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedPriceTier, setSelectedPriceTier] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "newest">(
     "featured"
   );
-  const [maxPriceRupees, setMaxPriceRupees] = useState<number>(100000);
+
+  const activePriceTier = PRICE_TIERS.find((t) => t.id === selectedPriceTier) || PRICE_TIERS[0];
 
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
+        // Subcategory filter
         if (
           selectedSubcategory !== "ALL" &&
           p.subcategory_name?.toLowerCase() !== selectedSubcategory.toLowerCase()
         ) {
           return false;
         }
+
+        // Search query filter
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           const match =
@@ -47,233 +72,216 @@ export function CategoryListingClient({
             (p.subcategory_name && p.subcategory_name.toLowerCase().includes(q));
           if (!match) return false;
         }
+
+        // Price tier filter
         const rupees = Math.round(p.selling_price_paise / 100);
-        if (rupees > maxPriceRupees) return false;
+        if (rupees < activePriceTier.min || rupees > activePriceTier.max) {
+          return false;
+        }
+
         return true;
       })
       .sort((a, b) => {
         if (sortBy === "price-asc") return a.selling_price_paise - b.selling_price_paise;
         if (sortBy === "price-desc") return b.selling_price_paise - a.selling_price_paise;
-        if (sortBy === "newest")
+        if (sortBy === "newest") {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
         return Number(b.is_featured) - Number(a.is_featured);
       });
-  }, [products, selectedSubcategory, searchQuery, sortBy, maxPriceRupees]);
+  }, [products, selectedSubcategory, searchQuery, activePriceTier, sortBy]);
+
+  const hasActiveFilters =
+    selectedSubcategory !== "ALL" || searchQuery.trim() !== "" || selectedPriceTier !== "all";
+
+  const clearAllFilters = () => {
+    setSelectedSubcategory("ALL");
+    setSearchQuery("");
+    setSelectedPriceTier("all");
+    setSortBy("featured");
+  };
 
   return (
-    <div className={isPremium ? "bg-[#24150E] text-[#FAF5ED] min-h-screen" : "bg-[#FAF5ED] min-h-screen"}>
-      {/* Category Banner */}
+    <div className={isPremium ? "bg-[#1E110A] text-[#FAF5ED] min-h-screen" : "bg-[#FAF5ED] min-h-screen"}>
+      {/* 1. Compact Header Strip (No giant bloated hero banner!) */}
       <section
-        className={`relative overflow-hidden border-b ${
-          isPremium
-            ? "bg-[#1A0F0A] border-[#C58B45]/25"
-            : "bg-gradient-to-r from-[#EFE3D4] to-[#E5D3BD] border-[#DFCBB3]"
-        }`}
+        className={`border-b ${
+          isPremium ? "bg-[#25150D] border-[#C58B45]/25" : "bg-white/80 border-[#EFE3D4]"
+        } backdrop-blur-xs`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-7 space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#633719]/15 border border-[#C58B45]/40 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#C58B45]">
-              <Sparkles className="w-3.5 h-3.5" />
-              {isPremium ? "Furcho Premium Living" : "Furcho Everyday Living"}
-            </div>
-            <h1
-              className={`text-3xl sm:text-4xl font-extrabold ${
-                isPremium ? "text-[#FAF5ED]" : "text-[#3B2418]"
-              }`}
-            >
-              {category.name} Collection
-            </h1>
-            <p
-              className={`text-sm sm:text-base max-w-2xl leading-relaxed ${
-                isPremium ? "text-[#E2D1BC]" : "text-[#5A4638]"
-              }`}
-            >
-              {category.description}
-            </p>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          {/* Breadcrumb Navigation */}
+          <nav className="flex items-center gap-1.5 text-xs text-[#8C7A6B] mb-1.5">
+            <Link href="/" className="hover:text-[#633719] transition">
+              Home
+            </Link>
+            <ChevronRight className="w-3 h-3 text-[#A8988B]" />
+            <span className={isPremium ? "text-[#E5B869] font-semibold" : "text-[#3B2418] font-semibold"}>
+              {category.name}
+            </span>
+          </nav>
 
-          <div className="lg:col-span-5">
-            <div className="overflow-hidden rounded-2xl border border-[#C58B45]/30 shadow-card aspect-[16/9] bg-[#3B2418]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={category.banner_url || category.image_url}
-                alt={category.name}
-                className="w-full h-full object-cover"
-              />
+          {/* Title & Product Count */}
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div>
+              <h1
+                className={`text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight ${
+                  isPremium ? "text-[#FAF5ED]" : "text-[#29221D]"
+                }`}
+              >
+                {category.name} Collection
+              </h1>
+              {category.description && (
+                <p className="text-xs sm:text-sm text-[#6E5D52] mt-0.5 max-w-xl">
+                  {category.description}
+                </p>
+              )}
+            </div>
+
+            <div className="text-xs sm:text-sm font-semibold text-[#8C7A6B]">
+              Showing <span className="font-extrabold text-[#3B2418]">{filteredProducts.length}</span>{" "}
+              {filteredProducts.length === 1 ? "product" : "products"}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Subcategory Navigation + Search + Sort + Price Filter */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Subcategory Pills */}
+      {/* 2. Main Content Container */}
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-4 sm:space-y-5">
+        {/* Subcategory Filter Chips (Horizontal swipe on mobile) */}
         {category.subcategories && category.subcategories.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0">
             <button
               type="button"
               onClick={() => setSelectedSubcategory("ALL")}
-              className={`rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition ${
+              className={`rounded-full px-3.5 py-1.5 text-xs font-bold shrink-0 transition cursor-pointer border ${
                 selectedSubcategory === "ALL"
-                  ? "bg-[#633719] text-white shadow-2xs"
+                  ? "bg-[#633719] text-white border-[#633719] shadow-2xs"
                   : isPremium
-                  ? "bg-[#3B2418] text-[#EFE3D4] hover:bg-[#633719]"
-                  : "bg-white text-[#29221D] border border-[#E2D1BC] hover:bg-[#EFE3D4]"
+                  ? "bg-[#2D1B11] text-[#EFE3D4] border-[#C58B45]/30 hover:bg-[#3B2418]"
+                  : "bg-white text-[#4B2913] border-[#DECAB2] hover:bg-[#FAF5ED]"
               }`}
             >
               All {category.name}
             </button>
-            {category.subcategories.map((sub) => (
-              <button
-                key={sub}
-                type="button"
-                onClick={() => setSelectedSubcategory(sub)}
-                className={`rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition ${
-                  selectedSubcategory.toLowerCase() === sub.toLowerCase()
-                    ? "bg-[#633719] text-white shadow-2xs"
-                    : isPremium
-                    ? "bg-[#3B2418] text-[#EFE3D4] hover:bg-[#633719]"
-                    : "bg-white text-[#29221D] border border-[#E2D1BC] hover:bg-[#EFE3D4]"
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
+
+            {category.subcategories.map((sub) => {
+              const isActive = selectedSubcategory.toLowerCase() === sub.toLowerCase();
+              return (
+                <button
+                  key={sub}
+                  type="button"
+                  onClick={() => setSelectedSubcategory(sub)}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-bold shrink-0 transition cursor-pointer border ${
+                    isActive
+                      ? "bg-[#633719] text-white border-[#633719] shadow-2xs"
+                      : isPremium
+                      ? "bg-[#2D1B11] text-[#EFE3D4] border-[#C58B45]/30 hover:bg-[#3B2418]"
+                      : "bg-white text-[#4B2913] border-[#DECAB2] hover:bg-[#FAF5ED]"
+                  }`}
+                >
+                  {sub}
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* Filter Bar */}
+        {/* Filter & Sort Toolbar */}
         <div
-          className={`mb-8 grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border p-4 ${
+          className={`rounded-2xl border p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${
             isPremium
-              ? "bg-[#2C1B12] border-[#C58B45]/25"
-              : "bg-white border-[#EFE3D4] shadow-soft"
+              ? "bg-[#25150D] border-[#C58B45]/25"
+              : "bg-white border-[#EFE3D4] shadow-2xs"
           }`}
         >
-          {/* Search Input */}
-          <div className="md:col-span-5 relative flex items-center">
-            <Search className="w-4 h-4 text-[#6E5D52] absolute left-3.5" />
+          {/* Left: Quick Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-[#8C7A6B] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Search in ${category.name}...`}
-              className={`w-full rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none border ${
+              placeholder={`Search ${category.name.toLowerCase()}...`}
+              className={`w-full rounded-xl pl-9 pr-8 py-2 text-xs sm:text-sm border focus:outline-none transition ${
                 isPremium
-                  ? "bg-[#1A0F0A] border-[#C58B45]/30 text-[#FAF5ED] placeholder:text-[#A38F80]"
-                  : "bg-[#FAF5ED] border-[#E2D1BC] text-[#29221D]"
+                  ? "bg-[#1E110A] border-[#C58B45]/30 text-[#FAF5ED] placeholder:text-[#A38F80]"
+                  : "bg-[#FAF5ED] border-[#DECAB2] text-[#29221D] focus:border-[#633719]"
               }`}
             />
-          </div>
-
-          {/* Price Range Filter */}
-          <div className="md:col-span-4 flex flex-col justify-center px-2">
-            <div className="flex items-center justify-between text-xs font-semibold mb-1">
-              <span className="flex items-center gap-1">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#C58B45]" />
-                Max Price Filter
-              </span>
-              <span className="text-[#C58B45]">
-                Up to ₹{maxPriceRupees.toLocaleString("en-IN")}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={1000}
-              max={100000}
-              step={500}
-              value={maxPriceRupees}
-              onChange={(e) => setMaxPriceRupees(Number(e.target.value))}
-              className="w-full accent-[#633719] cursor-pointer"
-            />
-          </div>
-
-          {/* Sort Dropdown */}
-          <div className="md:col-span-3 flex items-center">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              className={`w-full rounded-xl px-3.5 py-2.5 text-sm font-medium border focus:outline-none ${
-                isPremium
-                  ? "bg-[#1A0F0A] border-[#C58B45]/30 text-[#FAF5ED]"
-                  : "bg-[#FAF5ED] border-[#E2D1BC] text-[#29221D]"
-              }`}
-            >
-              <option value="featured">Sort: Featured First</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="newest">Newest Arrivals</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Demonstration Data Notice Banner */}
-        <div
-          className={`mb-6 rounded-xl border px-4 py-3 text-xs flex flex-wrap items-center justify-between gap-2 ${
-            isPremium
-              ? "bg-[#3B2418]/60 border-[#C58B45]/30 text-[#EFE3D4]"
-              : "bg-[#F5EBDD] border-[#DECAB2] text-[#4B2913]"
-          }`}
-        >
-          <span>
-            <strong>Catalogue Notice:</strong> Our verified flagship launch product is the{" "}
-            <Link
-              href="/products/foldable-wall-mounted-ironing-table"
-              className="underline font-bold"
-            >
-              Foldable Wall-Mounted Ironing Table (₹2,999)
-            </Link>
-            . Items labelled <em>Demo Item</em> are demonstration records editable via the{" "}
-            <Link href="/admin/products" className="underline font-semibold">
-              Admin Product Manager
-            </Link>
-            .
-          </span>
-          <Link
-            href={`/premium/custom-enquiry?section=${isPremium ? "PREMIUM" : "EVERYDAY"}&category=${encodeURIComponent(category.name)}`}
-            className="inline-flex items-center gap-1 font-bold text-[#C58B45] hover:underline"
-          >
-            Request Custom Furniture
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        {/* Product Grid */}
-        {filteredProducts.length === 0 ? (
-          <div
-            className={`rounded-3xl border p-12 text-center space-y-4 ${
-              isPremium
-                ? "bg-[#2C1B12] border-[#C58B45]/25"
-                : "bg-white border-[#EFE3D4]"
-            }`}
-          >
-            <p className="text-lg font-bold">No matching products in {category.name}</p>
-            <p className="text-sm opacity-80 max-w-md mx-auto">
-              We are expanding our {category.name} catalogue. You can reset your filters or send us
-              a custom furniture enquiry for bespoke requirements.
-            </p>
-            <div className="flex justify-center gap-3 pt-2">
+            {searchQuery && (
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedSubcategory("ALL");
-                  setSearchQuery("");
-                  setMaxPriceRupees(100000);
-                }}
-                className="rounded-xl bg-[#633719] px-5 py-2.5 text-xs font-bold text-white"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C7A6B] hover:text-[#29221D] cursor-pointer"
               >
-                Reset Filters
+                <X className="w-3.5 h-3.5" />
               </button>
-              <Link
-                href={`/premium/custom-enquiry?section=${isPremium ? "PREMIUM" : "EVERYDAY"}`}
-                className="rounded-xl border border-[#C58B45] px-5 py-2.5 text-xs font-bold text-[#C58B45]"
+            )}
+          </div>
+
+          {/* Right: Quick Price Range + Sort */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Price Filter Dropdown */}
+            <ModernSelect
+              options={PRICE_OPTIONS}
+              value={selectedPriceTier}
+              onChange={setSelectedPriceTier}
+              labelPrefix="Price: "
+              isPremium={isPremium}
+            />
+
+            {/* Sort Dropdown */}
+            <ModernSelect
+              options={SORT_OPTIONS}
+              value={sortBy}
+              onChange={(val) => setSortBy(val as typeof sortBy)}
+              labelPrefix="Sort: "
+              isPremium={isPremium}
+              menuAlign="right"
+            />
+
+            {/* Clear All Filters Button */}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 transition cursor-pointer"
               >
-                Send Custom Enquiry
-              </Link>
+                <X className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Product Grid (2 columns on mobile, 3 on tablet, 4 on desktop) */}
+        {filteredProducts.length === 0 ? (
+          <div
+            className={`rounded-3xl border p-8 sm:p-14 text-center space-y-3 ${
+              isPremium
+                ? "bg-[#25150D] border-[#C58B45]/25"
+                : "bg-white border-[#EFE3D4] shadow-2xs"
+            }`}
+          >
+            <p className="text-base sm:text-lg font-extrabold text-[#3B2418]">
+              No products found matching your selection
+            </p>
+            <p className="text-xs sm:text-sm text-[#6E5D52] max-w-md mx-auto">
+              Try clearing your search query or selecting &quot;All Prices&quot; to view all available products.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="rounded-xl bg-[#633719] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#3B2418] transition cursor-pointer"
+              >
+                View All {category.name}
+              </button>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 items-stretch">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}

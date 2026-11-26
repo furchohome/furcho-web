@@ -6,6 +6,7 @@ import { CheckCircle2, Loader2, Clock, Megaphone, Share2 } from "lucide-react";
 import { Product, SiteSettings } from "@/types/database";
 import { paiseToRupees, rupeesToPaise } from "@/lib/utils";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { ModernSelect } from "@/components/ui/ModernSelect";
 import { useToast } from "@/components/providers/ToastProvider";
 
 export default function AdminSettingsPage() {
@@ -14,7 +15,7 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [promoPriceRupees, setPromoPriceRupees] = useState("2999");
-  const [countdownLocalInput, setCountdownLocalInput] = useState("");
+  const [isTimerEnabled, setIsTimerEnabled] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const loadSettings = useCallback(async () => {
@@ -29,14 +30,7 @@ export default function AdminSettingsPage() {
       setProducts(data.products || []);
       if (data.site_settings) {
         setPromoPriceRupees(String(paiseToRupees(data.site_settings.promo_price_paise)));
-        if (data.site_settings.promo_countdown_end) {
-          const dt = new Date(data.site_settings.promo_countdown_end);
-          if (!isNaN(dt.getTime())) {
-            setCountdownLocalInput(dt.toISOString().slice(0, 16));
-          }
-        } else {
-          setCountdownLocalInput("");
-        }
+        setIsTimerEnabled(Boolean(data.site_settings.promo_countdown_end));
       }
     } catch {
       toast.error("Load Error", "Failed to load site settings.");
@@ -52,12 +46,13 @@ export default function AdminSettingsPage() {
     if (!settings) return;
     setIsSaving(true);
     try {
+      const midnightTonight = new Date();
+      midnightTonight.setHours(24, 0, 0, 0);
+
       const payload: Partial<SiteSettings> = {
         ...settings,
         promo_price_paise: rupeesToPaise(promoPriceRupees),
-        promo_countdown_end: countdownLocalInput
-          ? new Date(countdownLocalInput).toISOString()
-          : null,
+        promo_countdown_end: isTimerEnabled ? midnightTonight.toISOString() : null,
       };
 
       const res = await fetch("/api/admin/cms", {
@@ -165,21 +160,16 @@ export default function AdminSettingsPage() {
               <label className="block text-xs font-bold uppercase mb-1">
                 Featured Hero Product
               </label>
-              <select
-                value={settings.featured_product_slug}
-                onChange={(e) =>
-                  setSettings({ ...settings, featured_product_slug: e.target.value })
-                }
-                className="w-full rounded-xl border border-[#D8C7B4] bg-[#FAF5ED] px-3.5 py-2.5 text-sm font-bold"
-              >
-                {products
+              <ModernSelect
+                options={products
                   .filter((p) => p.store_section === "EVERYDAY")
-                  .map((p) => (
-                    <option key={p.id} value={p.slug}>
-                      {p.name} ({p.sku})
-                    </option>
-                  ))}
-              </select>
+                  .map((p) => ({ value: p.slug, label: `${p.name} (${p.sku})` }))}
+                value={settings.featured_product_slug}
+                onChange={(val) =>
+                  setSettings({ ...settings, featured_product_slug: val })
+                }
+                className="w-full"
+              />
             </div>
 
             <div>
@@ -194,32 +184,23 @@ export default function AdminSettingsPage() {
               />
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold uppercase mb-1">
-                Promotional Countdown End Date &amp; Time (Leave empty to hide countdown)
-              </label>
-              <div className="flex flex-wrap items-center gap-3">
+            <div className="sm:col-span-2 pt-3 border-t border-[#DECAB2]/60">
+              <label className="flex items-start sm:items-center gap-3 cursor-pointer select-none">
                 <input
-                  type="datetime-local"
-                  value={countdownLocalInput}
-                  onChange={(e) => setCountdownLocalInput(e.target.value)}
-                  className="rounded-xl border border-[#D8C7B4] bg-[#FAF5ED] px-3.5 py-2.5 text-sm"
+                  type="checkbox"
+                  checked={isTimerEnabled}
+                  onChange={(e) => setIsTimerEnabled(e.target.checked)}
+                  className="w-5 h-5 rounded-md accent-[#633719] cursor-pointer shrink-0 mt-0.5 sm:mt-0"
                 />
-                {countdownLocalInput && (
-                  <button
-                    type="button"
-                    onClick={() => setCountdownLocalInput("")}
-                    className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition"
-                  >
-                    Clear End Date (Hide Countdown)
-                  </button>
-                )}
-              </div>
-              <p className="text-[11px] text-[#6E5D52] mt-1.5">
-                Per Furcho integrity policy: The countdown timer only renders when an active future
-                promotional end date is configured here. When cleared or expired, the timer hides
-                automatically.
-              </p>
+                <div className="space-y-0.5">
+                  <span className="text-sm font-bold text-[#3B2418] block">
+                    Show Promotional Countdown Timer (Daily Midnight Timer)
+                  </span>
+                  <span className="text-xs text-[#6E5D52] block">
+                    When checked (ON), counts down remaining hours, minutes, and seconds until midnight (12:00 AM) and restarts daily. When unchecked (OFF), completely hidden from storefront.
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
         </div>

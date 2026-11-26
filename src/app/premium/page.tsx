@@ -182,7 +182,7 @@ export default async function PremiumHomePage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {premiumProducts.map((product) => (
               <ProductCard key={product.id} product={product} variant="PREMIUM" />
             ))}

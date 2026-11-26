@@ -95,12 +95,12 @@ export function HeroFeaturedProduct({
 
   const [currentIdx, setCurrentIdx] = useState(0);
 
-  // Auto-slide every 1.5 seconds
+  // Auto-slide every 4 seconds
   useEffect(() => {
     if (activeBanners.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIdx((prev) => (prev + 1) % activeBanners.length);
-    }, 1500);
+    }, 4000);
     return () => clearInterval(interval);
   }, [activeBanners.length]);
 
@@ -108,7 +108,7 @@ export function HeroFeaturedProduct({
   const targetProduct = currentBanner.matchedProduct || product;
 
   const handleOrderClick = () => {
-    addItem(targetProduct, 1, targetProduct.variants[0] || null);
+    addItem(targetProduct, 1, targetProduct.variants[0] || null, { openDrawer: false });
     router.push("/checkout");
   };
 
@@ -130,19 +130,8 @@ export function HeroFeaturedProduct({
           6) Full width "Order Now" and "View Product Details"
           ========================================================================= */}
       <section className="block md:hidden bg-[#FAF5ED] px-4 pt-4 pb-8 space-y-4 border-b border-[#E4D3BE]">
-        {/* Top Badges & Product Titles */}
+        {/* Top Product Titles */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center rounded-full bg-[#F5E5C9] px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-[#8A5424]">
-              {currentBanner.badge_text}
-            </span>
-            {activeBanners.length > 1 && (
-              <span className="text-[11px] font-bold text-[#633719] bg-[#EFE0CC] px-2 py-0.5 rounded-full">
-                {currentIdx + 1} / {activeBanners.length}
-              </span>
-            )}
-          </div>
-
           <h1 className="text-2xl font-extrabold text-[#3B2418] leading-tight">
             {currentBanner.title}
           </h1>
@@ -207,7 +196,10 @@ export function HeroFeaturedProduct({
         {/* Countdown Timer (Below Price on Mobile) */}
         {settings.promo_countdown_end && (
           <div className="w-full">
-            <CountdownTimer endDateIso={settings.promo_countdown_end} />
+            <CountdownTimer
+              endDateIso={settings.promo_countdown_end}
+              cycleHours={settings.promo_countdown_hours}
+            />
           </div>
         )}
 
@@ -278,20 +270,6 @@ export function HeroFeaturedProduct({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* Left Hero Content & Action Controls */}
             <div className="lg:col-span-7 xl:col-span-6 space-y-5">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex items-center rounded-full bg-[#EFE0CC]/90 backdrop-blur-xs border border-[#DEC7AC] px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-widest text-[#8A5424]">
-                  {currentBanner.badge_text}
-                </span>
-
-                {activeBanners.length > 1 && (
-                  <div className="flex items-center gap-1.5 bg-[#FAF5ED]/90 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-[#D8C7B4] text-[11px] font-bold text-[#633719]">
-                    <span>{currentIdx + 1}</span>
-                    <span className="opacity-50">/</span>
-                    <span>{activeBanners.length}</span>
-                  </div>
-                )}
-              </div>
-
               <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-[#3B2418] leading-[1.14] tracking-tight transition-all duration-300">
                 {currentBanner.title}
               </h1>
@@ -344,7 +322,10 @@ export function HeroFeaturedProduct({
 
               {/* Optional Promotional Countdown Timer */}
               <div>
-                <CountdownTimer endDateIso={settings.promo_countdown_end} />
+                <CountdownTimer
+                  endDateIso={settings.promo_countdown_end}
+                  cycleHours={settings.promo_countdown_hours}
+                />
               </div>
 
               {/* Dual CTA Buttons */}

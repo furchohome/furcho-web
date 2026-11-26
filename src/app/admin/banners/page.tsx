@@ -65,7 +65,7 @@ export default function AdminBannersPage() {
       product_slug: null,
       title: "",
       subtitle: "",
-      badge_text: "FEATURED PRODUCT",
+      badge_text: "",
       price_paise: null,
       launch_price_label: "Launch Price",
       cta_primary_text: "Order Now",
@@ -151,7 +151,7 @@ export default function AdminBannersPage() {
   return (
     <AdminShell
       title="Banner & Promotional Visuals"
-      subtitle="Edit Headline, Subtitle, Price, Desktop Image & Mobile Image for every banner (Hero auto-slides at 1.5s)"
+      subtitle="Edit Headline, Subtitle, Price, Desktop Image & Mobile Image for every banner (Hero auto-slides at 4s)"
     >
       <div className="space-y-6">
         <div className="flex justify-end">
@@ -196,7 +196,7 @@ export default function AdminBannersPage() {
                       </span>
                       {ban.placement === "HERO" && (
                         <span className="rounded-full bg-emerald-800 text-white px-2.5 py-1 text-[10px] font-bold">
-                          Hero Slider (1.5s Auto)
+                          Hero Slider (4s Auto)
                         </span>
                       )}
                     </div>
@@ -300,7 +300,7 @@ export default function AdminBannersPage() {
                     }
                     className="w-full rounded-xl border border-[#D8C7B4] bg-white px-3 py-2 text-sm font-semibold"
                   >
-                    <option value="HERO">HERO (Auto-slides at 1.5s on Homepage)</option>
+                    <option value="HERO">HERO (Auto-slides at 4s on Homepage)</option>
                     <option value="PREMIUM_PROMO">PREMIUM_PROMO</option>
                     <option value="CUSTOM_PROMO">CUSTOM_PROMO</option>
                     <option value="COMMERCIAL_PROMO">COMMERCIAL_PROMO</option>
@@ -396,7 +396,7 @@ export default function AdminBannersPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase mb-1">Price (₹ INR - Optional)</label>
                   <input
@@ -419,21 +419,6 @@ export default function AdminBannersPage() {
                       })
                     }
                     placeholder="e.g. Launch Price"
-                    className="w-full rounded-xl border border-[#D8C7B4] bg-white px-3.5 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase mb-1">Top Badge Label</label>
-                  <input
-                    type="text"
-                    value={editingBanner.badge_text || ""}
-                    onChange={(e) =>
-                      setEditingBanner({
-                        ...editingBanner,
-                        badge_text: e.target.value,
-                      })
-                    }
-                    placeholder="e.g. FEATURED PRODUCT"
                     className="w-full rounded-xl border border-[#D8C7B4] bg-white px-3.5 py-2 text-sm"
                   />
                 </div>
