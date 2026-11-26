@@ -103,7 +103,7 @@ export function ModernSelect({
         <div
           role="listbox"
           className={`absolute z-50 mt-1.5 ${
-            isFullWidth ? "w-full min-w-full" : "min-w-[200px]"
+            isFullWidth ? "w-full min-w-full" : "min-w-[170px] max-w-[calc(100vw-32px)]"
           } max-h-64 overflow-y-auto rounded-2xl p-1.5 shadow-elevated border animate-fade-in ${
             menuAlign === "right" ? "right-0" : "left-0"
           } ${

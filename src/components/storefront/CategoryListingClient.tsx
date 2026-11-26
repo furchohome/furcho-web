@@ -147,63 +147,65 @@ export function CategoryListingClient({
       </section>
 
       {/* 2. Main Content Container */}
-      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-4 sm:space-y-5">
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-4 sm:space-y-5 overflow-hidden">
         {/* Subcategory Filter Chips (Horizontal swipe on mobile) */}
         {category.subcategories && category.subcategories.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0">
-            <button
-              type="button"
-              onClick={() => setSelectedSubcategory("ALL")}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold shrink-0 transition cursor-pointer border ${
-                selectedSubcategory === "ALL"
-                  ? "bg-[#633719] text-white border-[#633719] shadow-2xs"
-                  : isPremium
-                  ? "bg-[#2D1B11] text-[#EFE3D4] border-[#C58B45]/30 hover:bg-[#3B2418]"
-                  : "bg-white text-[#4B2913] border-[#DECAB2] hover:bg-[#FAF5ED]"
-              }`}
-            >
-              All {category.name}
-            </button>
+          <div className="w-full max-w-full overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex items-center gap-1.5 w-max">
+              <button
+                type="button"
+                onClick={() => setSelectedSubcategory("ALL")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold shrink-0 transition cursor-pointer border ${
+                  selectedSubcategory === "ALL"
+                    ? "bg-[#633719] text-white border-[#633719] shadow-2xs"
+                    : isPremium
+                    ? "bg-[#2D1B11] text-[#EFE3D4] border-[#C58B45]/30 hover:bg-[#3B2418]"
+                    : "bg-white text-[#4B2913] border-[#DECAB2] hover:bg-[#FAF5ED]"
+                }`}
+              >
+                All {category.name}
+              </button>
 
-            {category.subcategories.map((sub) => {
-              const isActive = selectedSubcategory.toLowerCase() === sub.toLowerCase();
-              return (
-                <button
-                  key={sub}
-                  type="button"
-                  onClick={() => setSelectedSubcategory(sub)}
-                  className={`rounded-full px-3.5 py-1.5 text-xs font-bold shrink-0 transition cursor-pointer border ${
-                    isActive
-                      ? "bg-[#633719] text-white border-[#633719] shadow-2xs"
-                      : isPremium
-                      ? "bg-[#2D1B11] text-[#EFE3D4] border-[#C58B45]/30 hover:bg-[#3B2418]"
-                      : "bg-white text-[#4B2913] border-[#DECAB2] hover:bg-[#FAF5ED]"
-                  }`}
-                >
-                  {sub}
-                </button>
-              );
-            })}
+              {category.subcategories.map((sub) => {
+                const isActive = selectedSubcategory.toLowerCase() === sub.toLowerCase();
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => setSelectedSubcategory(sub)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-bold shrink-0 transition cursor-pointer border ${
+                      isActive
+                        ? "bg-[#633719] text-white border-[#633719] shadow-2xs"
+                        : isPremium
+                        ? "bg-[#2D1B11] text-[#EFE3D4] border-[#C58B45]/30 hover:bg-[#3B2418]"
+                        : "bg-white text-[#4B2913] border-[#DECAB2] hover:bg-[#FAF5ED]"
+                    }`}
+                  >
+                    {sub}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* Filter & Sort Toolbar */}
         <div
-          className={`rounded-2xl border p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${
+          className={`rounded-2xl border p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full max-w-full ${
             isPremium
               ? "bg-[#25150D] border-[#C58B45]/25"
               : "bg-white border-[#EFE3D4] shadow-2xs"
           }`}
         >
           {/* Left: Quick Search */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full max-w-full">
             <Search className="w-4 h-4 text-[#8C7A6B] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search ${category.name.toLowerCase()}...`}
-              className={`w-full rounded-xl pl-9 pr-8 py-2 text-xs sm:text-sm border focus:outline-none transition ${
+              className={`w-full rounded-xl pl-9 pr-8 py-2 text-sm border focus:outline-none transition ${
                 isPremium
                   ? "bg-[#1E110A] border-[#C58B45]/30 text-[#FAF5ED] placeholder:text-[#A38F80]"
                   : "bg-[#FAF5ED] border-[#DECAB2] text-[#29221D] focus:border-[#633719]"
@@ -221,7 +223,7 @@ export function CategoryListingClient({
           </div>
 
           {/* Right: Quick Price Range + Sort */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {/* Price Filter Dropdown */}
             <ModernSelect
               options={PRICE_OPTIONS}
@@ -229,6 +231,7 @@ export function CategoryListingClient({
               onChange={setSelectedPriceTier}
               labelPrefix="Price: "
               isPremium={isPremium}
+              className="flex-1 sm:flex-initial"
             />
 
             {/* Sort Dropdown */}
@@ -239,6 +242,7 @@ export function CategoryListingClient({
               labelPrefix="Sort: "
               isPremium={isPremium}
               menuAlign="right"
+              className="flex-1 sm:flex-initial"
             />
 
             {/* Clear All Filters Button */}

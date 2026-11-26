@@ -63,7 +63,7 @@ export function CountdownTimer({ endDateIso, cycleHours }: CountdownTimerProps) 
     String(Math.max(0, Math.floor(Number(n) || 0))).padStart(2, "0");
 
   return (
-    <div className="inline-flex flex-wrap items-center gap-3 sm:gap-4 rounded-2xl bg-[#F5EBDD] border border-[#E4D3BE] px-4 py-2.5 shadow-2xs">
+    <div className="inline-flex flex-wrap items-center gap-3 sm:gap-4 rounded-2xl bg-[#F5EBDD] border border-[#E4D3BE] px-4 py-2.5 shadow-2xs max-w-full">
       <div className="flex items-center gap-2 text-[#4B2913] font-semibold text-xs sm:text-sm pr-1">
         <Clock className="w-4 h-4 text-[#633719]" />
         <span>Offer Ends In</span>

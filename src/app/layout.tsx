@@ -1,10 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { CartProvider } from "@/components/providers/CartProvider";
 import { MetaPixel } from "@/components/tracking/MetaPixel";
 import { getSiteSettings } from "@/lib/db";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 // Headings, navigation, buttons, product titles & prices
 const poppins = Poppins({
