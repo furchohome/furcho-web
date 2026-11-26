@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -18,13 +18,12 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { DeleteConfirmModal } from "@/components/ui/DeleteConfirmModal";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAdminCms } from "@/hooks/useAdminCms";
 
 export default function AdminProductsPage() {
   const router = useRouter();
   const toast = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { products, categories, isLoading, invalidate } = useAdminCms();
   const [searchQuery, setSearchQuery] = useState("");
   const [sectionFilter, setSectionFilter] = useState<"ALL" | StoreSectionCode>("ALL");
 
@@ -44,27 +43,41 @@ export default function AdminProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/admin/cms");
-      if (res.status === 401) {
-        router.push("/admin/login");
-        return;
-      }
-      const data = await res.json();
-      setProducts(data.products || []);
-      setCategories(data.categories || []);
-    } catch {
-      toast.error("Load Failed", "Could not load products from server.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router, toast]);
+  // Reviews management modal state
+  const [selectedProductForReviews, setSelectedProductForReviews] = useState<Product | null>(null);
+  const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
+  const [isDeletingReview, setIsDeletingReview] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const openReviewsModal = (product: Product) => {
+    setSelectedProductForReviews(product);
+    setIsReviewsModalOpen(true);
+  };
+
+  const handleDeleteReview = async (productId: string, reviewId: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this customer review?")) return;
+    setIsDeletingReview(true);
+    try {
+      const res = await fetch("/api/admin/cms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entity: "review",
+          action: "delete",
+          payload: { product_id: productId, review_id: reviewId },
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to delete review.");
+      toast.success("Review Deleted", "The customer review was permanently removed.");
+      await invalidate();
+      setSelectedProductForReviews((prev) =>
+        prev ? { ...prev, reviews: (prev.reviews || []).filter((r) => r.id !== reviewId) } : null
+      );
+    } catch {
+      toast.error("Error", "Could not delete review.");
+    } finally {
+      setIsDeletingReview(false);
+    }
+  };
 
   const openCreateModal = () => {
     const defaultCat = categories[0];
@@ -183,7 +196,7 @@ export default function AdminProductsPage() {
 
       toast.success("Product Saved", `"${data.product.name}" has been updated in the catalogue.`);
       setIsModalOpen(false);
-      loadData();
+      await invalidate();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to save product.";
       toast.error("Save Error", msg);
@@ -210,7 +223,7 @@ export default function AdminProductsPage() {
 
       toast.success("Product Deleted", `"${deleteTarget.name}" was removed from the database.`);
       setDeleteTarget(null);
-      loadData();
+      await invalidate();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Delete failed.";
       toast.error("Delete Error", msg);
@@ -385,8 +398,17 @@ export default function AdminProductsPage() {
                       <div className="inline-flex items-center gap-2">
                         <button
                           type="button"
+                          onClick={() => openReviewsModal(product)}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-[#D8C7B4] bg-[#FAF5ED] px-2.5 py-2 text-xs font-bold text-[#633719] hover:bg-[#633719] hover:text-white transition cursor-pointer"
+                          title="Manage Reviews"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-[#C58B45] text-[#C58B45]" />
+                          <span>Reviews ({(product.reviews || []).length})</span>
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => openEditModal(product)}
-                          className="rounded-xl border border-[#D8C7B4] bg-[#FAF5ED] p-2 text-[#633719] hover:bg-[#633719] hover:text-white transition"
+                          className="rounded-xl border border-[#D8C7B4] bg-[#FAF5ED] p-2 text-[#633719] hover:bg-[#633719] hover:text-white transition cursor-pointer"
                           title="Edit Product"
                         >
                           <Pencil className="w-4 h-4" />
@@ -394,7 +416,7 @@ export default function AdminProductsPage() {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(product)}
-                          className="rounded-xl border border-red-200 bg-red-50 p-2 text-red-700 hover:bg-red-600 hover:text-white transition"
+                          className="rounded-xl border border-red-200 bg-red-50 p-2 text-red-700 hover:bg-red-600 hover:text-white transition cursor-pointer"
                           title="Delete Product"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -550,15 +572,18 @@ export default function AdminProductsPage() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider mb-1">
-                    Original Price (₹ INR - Optional)
+                    MRP / Original Price (₹ INR - Strikethrough &amp; % Discount)
                   </label>
                   <input
                     type="number"
                     value={origPriceRupees}
                     onChange={(e) => setOrigPriceRupees(e.target.value)}
-                    placeholder="Leave blank if no strikethrough price"
-                    className="w-full rounded-xl border border-[#D8C7B4] bg-white px-3.5 py-2 text-sm"
+                    placeholder="e.g. 1999 (Higher than selling price shows % OFF)"
+                    className="w-full rounded-xl border border-[#D8C7B4] bg-white px-3.5 py-2 text-sm font-semibold"
                   />
+                  <p className="text-[11px] text-[#6E5D52] mt-1">
+                    Enter MRP higher than Selling Price to automatically show strikethrough price and calculated % discount badge on storefront.
+                  </p>
                 </div>
 
                 <div>
@@ -846,6 +871,93 @@ export default function AdminProductsPage() {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* Manage Customer Reviews Modal */}
+      {isReviewsModalOpen && selectedProductForReviews && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="relative w-full max-w-2xl rounded-3xl bg-white border border-[#E5D5C3] p-6 shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EFE3D4]">
+              <div>
+                <h3 className="text-lg font-black text-[#3B2418]">
+                  Manage Customer Reviews
+                </h3>
+                <p className="text-xs text-[#6E5D52] mt-0.5">
+                  {selectedProductForReviews.name} ({(selectedProductForReviews.reviews || []).length} total reviews)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsReviewsModalOpen(false)}
+                className="p-2 rounded-xl text-[#6E5D52] hover:bg-[#FAF5ED] transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4 space-y-3">
+              {(selectedProductForReviews.reviews || []).length === 0 ? (
+                <div className="text-center py-12 text-[#6E5D52]">
+                  <p className="font-bold">No customer reviews yet for this product.</p>
+                  <p className="text-xs mt-1">When buyers submit reviews on the storefront, they will appear here with instant deletion control.</p>
+                </div>
+              ) : (
+                (selectedProductForReviews.reviews || []).map((rev) => (
+                  <div
+                    key={rev.id}
+                    className="p-4 rounded-2xl bg-[#FAF5ED] border border-[#DFCBB3] flex items-start justify-between gap-4"
+                  >
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="flex text-[#C58B45]">
+                          {Array.from({ length: rev.rating }).map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                          ))}
+                        </div>
+                        <span className="text-xs font-black text-[#3B2418]">{rev.author_name}</span>
+                        {rev.district && <span className="text-xs text-[#8C7A6B]">· {rev.district}</span>}
+                        {rev.verified_buyer && (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.2 rounded-full">
+                            Verified
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#29221D] leading-relaxed">{rev.comment}</p>
+                      <p className="text-[10px] text-[#8C7A6B]">
+                        {new Date(rev.created_at).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isDeletingReview}
+                      onClick={() => handleDeleteReview(selectedProductForReviews.id, rev.id)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition cursor-pointer shrink-0 disabled:opacity-50"
+                      title="Permanently Delete Review"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-[#EFE3D4] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsReviewsModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl bg-[#633719] text-white text-xs font-bold hover:bg-[#3B2418] transition cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminShell>
   );
 }

@@ -18,7 +18,7 @@ import { Footer } from "@/components/storefront/Footer";
 import { HeroFeaturedProduct } from "@/components/storefront/HeroFeaturedProduct";
 import { TrendingProductsSection } from "@/components/storefront/TrendingProductsSection";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function HomePage() {
   const [settings, everydayCategories, everydayProducts, allBanners] = await Promise.all([

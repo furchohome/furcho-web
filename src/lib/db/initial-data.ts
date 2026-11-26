@@ -295,8 +295,8 @@ export const INITIAL_DB_STATE: FurchoDatabaseState = {
       description:
         "Clearly labelled demonstration product matching the Furcho Everyday Living reference collection. A warm wooden kitchen utility table with an open lower shelf for woven storage baskets, spice jars and everyday appliances. Final dimensions and material specifications can be updated in the Admin Dashboard.",
       selling_price_paise: 449900,
-      original_price_paise: null,
-      launch_price_label: "Demo Listing",
+      original_price_paise: 599900,
+      launch_price_label: null,
       features: [
         "Compact footprint for apartment kitchens",
         "Lower slatted storage shelf for baskets & cookware",
@@ -351,8 +351,8 @@ export const INITIAL_DB_STATE: FurchoDatabaseState = {
       description:
         "Clearly labelled demonstration product from the Furcho Everyday Living reference showcase. Designed to keep entryways and foyers clutter-free with open compartments and a display top for plants and daily essentials. Update final specifications via the Admin Dashboard.",
       selling_price_paise: 249900,
-      original_price_paise: null,
-      launch_price_label: "Demo Listing",
+      original_price_paise: 329900,
+      launch_price_label: null,
       features: [
         "Space-saving entryway footprint",
         "Multi-tier open shelving for airflow",
@@ -406,8 +406,8 @@ export const INITIAL_DB_STATE: FurchoDatabaseState = {
       description:
         "Clearly labelled demonstration product matching the Furcho Everyday Living reference design. Features twin smooth-glide drawers with integrated pull handles and elevated tapered legs for easy floor cleaning. Enter exact dimensions and wood specifications in the Admin Dashboard.",
       selling_price_paise: 229900,
-      original_price_paise: null,
-      launch_price_label: "Demo Listing",
+      original_price_paise: 299900,
+      launch_price_label: null,
       features: [
         "Two spacious storage drawers",
         "Elevated tapered legs for easy cleaning",
@@ -461,8 +461,8 @@ export const INITIAL_DB_STATE: FurchoDatabaseState = {
       description:
         "Clearly labelled demonstration product from the Furcho Everyday Living reference collection. Clean floating wall shelves that maximize vertical wall space in living rooms, study corners or kitchens. Editable via the Admin Dashboard.",
       selling_price_paise: 149900,
-      original_price_paise: null,
-      launch_price_label: "Demo Listing",
+      original_price_paise: 199900,
+      launch_price_label: null,
       features: [
         "Space-saving floating wall design",
         "Dual-tier storage for books & decor",
@@ -516,8 +516,8 @@ export const INITIAL_DB_STATE: FurchoDatabaseState = {
       description:
         "Clearly labelled demonstration product inspired by the Furcho Kitchen category banner. Keeps countertops clear while displaying spice jars and pantry staples within easy reach.",
       selling_price_paise: 189900,
-      original_price_paise: null,
-      launch_price_label: "Demo Listing",
+      original_price_paise: 249900,
+      launch_price_label: null,
       features: [
         "Wall-mounted pantry & spice organization",
         "Frees up kitchen counter workspace",

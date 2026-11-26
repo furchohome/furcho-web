@@ -3,6 +3,7 @@ import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { CartProvider } from "@/components/providers/CartProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { MetaPixel } from "@/components/tracking/MetaPixel";
 import { getSiteSettings } from "@/lib/db";
 
@@ -82,9 +83,11 @@ export default async function RootLayout({
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body className="font-sans bg-[#FAF5ED] text-[#29221D] antialiased selection:bg-[#633719] selection:text-white">
         <MetaPixel pixelId={settings.meta_pixel_id} />
-        <ToastProvider>
-          <CartProvider>{children}</CartProvider>
-        </ToastProvider>
+        <QueryProvider>
+          <ToastProvider>
+            <CartProvider>{children}</CartProvider>
+          </ToastProvider>
+        </QueryProvider>
       </body>
     </html>
   );

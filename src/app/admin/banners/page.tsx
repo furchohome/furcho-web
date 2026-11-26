@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, X, Loader2, CheckCircle2, Image as ImageIcon, Info } from "lucide-react";
 import { Banner, Product, StoreSectionCode } from "@/types/database";
@@ -9,13 +9,12 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { DeleteConfirmModal } from "@/components/ui/DeleteConfirmModal";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAdminCms } from "@/hooks/useAdminCms";
 
 export default function AdminBannersPage() {
   const router = useRouter();
   const toast = useToast();
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { banners, products, isLoading, invalidate } = useAdminCms();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -26,36 +25,6 @@ export default function AdminBannersPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Banner | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const loadBanners = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch("/api/admin/cms", { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (res.status === 401) {
-        window.location.href = "/admin/login";
-        return;
-      }
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setBanners(data.banners || []);
-      setProducts(data.products || []);
-    } catch (err: unknown) {
-      console.error("Failed to load banners:", err);
-      toast.error("Loading Error", "Could not load banners. Please verify your admin login or refresh.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    loadBanners();
-  }, [loadBanners]);
 
   const openCreate = () => {
     setEditingBanner({
@@ -115,7 +84,7 @@ export default function AdminBannersPage() {
 
       toast.success("Banner Saved", `"${data.banner.title}" updated.`);
       setIsModalOpen(false);
-      loadBanners();
+      await invalidate();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to save banner.";
       toast.error("Save Error", msg);
@@ -140,7 +109,7 @@ export default function AdminBannersPage() {
       if (!res.ok) throw new Error("Failed to delete banner.");
       toast.success("Banner Deleted", `"${deleteTarget.title}" removed.`);
       setDeleteTarget(null);
-      loadBanners();
+      await invalidate();
     } catch {
       toast.error("Delete Error", "Failed to delete banner.");
     } finally {

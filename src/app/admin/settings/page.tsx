@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, Clock, Megaphone, Share2 } from "lucide-react";
 import { Product, SiteSettings } from "@/types/database";
@@ -8,38 +8,25 @@ import { paiseToRupees, rupeesToPaise } from "@/lib/utils";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { ModernSelect } from "@/components/ui/ModernSelect";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAdminCms } from "@/hooks/useAdminCms";
 
 export default function AdminSettingsPage() {
   const router = useRouter();
   const toast = useToast();
+  const { settings: fetchedSettings, products, isLoading, invalidate } = useAdminCms();
+
   const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
   const [promoPriceRupees, setPromoPriceRupees] = useState("2999");
   const [isTimerEnabled, setIsTimerEnabled] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const loadSettings = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/cms");
-      if (res.status === 401) {
-        router.push("/admin/login");
-        return;
-      }
-      const data = await res.json();
-      setSettings(data.site_settings);
-      setProducts(data.products || []);
-      if (data.site_settings) {
-        setPromoPriceRupees(String(paiseToRupees(data.site_settings.promo_price_paise)));
-        setIsTimerEnabled(Boolean(data.site_settings.promo_countdown_end));
-      }
-    } catch {
-      toast.error("Load Error", "Failed to load site settings.");
-    }
-  }, [router, toast]);
-
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    if (fetchedSettings) {
+      setSettings(fetchedSettings);
+      setPromoPriceRupees(String(paiseToRupees(fetchedSettings.promo_price_paise)));
+      setIsTimerEnabled(Boolean(fetchedSettings.promo_countdown_end));
+    }
+  }, [fetchedSettings]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +55,7 @@ export default function AdminSettingsPage() {
       if (!res.ok) throw new Error(data.error || "Failed to save settings.");
 
       setSettings(data.settings);
+      await invalidate();
       toast.success(
         "Settings Saved",
         "Homepage announcement bar, countdown offer, and Meta tracking updated."

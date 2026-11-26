@@ -7,7 +7,7 @@ import { Footer } from "@/components/storefront/Footer";
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";
 import { paiseToRupees } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,

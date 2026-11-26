@@ -5,7 +5,7 @@ import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { CategoryListingClient } from "@/components/storefront/CategoryListingClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Premium Solid Wood Dining Tables & Rattan Cane Sets | Premium Living",

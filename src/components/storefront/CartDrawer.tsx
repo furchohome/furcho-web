@@ -38,15 +38,36 @@ export function CartDrawer() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isCartDrawerOpen, closeCartDrawer]);
 
-  // Lock body scroll when drawer is open
+  // Lock root & body scroll when drawer is open
   useEffect(() => {
-    if (isCartDrawerOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (!isCartDrawerOpen) return;
+
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+    const originalBodyOverscroll = document.body.style.overscrollBehavior;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+    document.body.style.overscrollBehavior = "none";
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.("[data-cart-drawer]")) {
+        return;
+      }
+      e.preventDefault();
+    };
+
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overscrollBehavior = originalHtmlOverscroll;
+      document.body.style.overscrollBehavior = originalBodyOverscroll;
+      document.removeEventListener("touchmove", handleTouchMove);
     };
   }, [isCartDrawerOpen]);
 
@@ -73,10 +94,11 @@ export function CartDrawer() {
 
       {/* 2. Slide-out Drawer Panel */}
       <div
+        data-cart-drawer="true"
         role="dialog"
         aria-modal="true"
         aria-label="Shopping Cart Drawer"
-        className="relative z-10 flex h-full w-full max-w-md flex-col bg-[#FAF5ED] shadow-2xl border-l border-[#DECBB3] animate-slide-in-right overscroll-contain overflow-hidden"
+        className="relative z-10 flex h-full w-full max-w-md flex-col bg-[#FAF5ED] shadow-2xl border-l border-[#DECBB3] animate-slide-in-right overscroll-contain touch-pan-y overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E4D3BE] px-5 py-4 bg-white shrink-0">

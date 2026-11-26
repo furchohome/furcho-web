@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, X, Loader2, CheckCircle2 } from "lucide-react";
 import { Category, StoreSectionCode } from "@/types/database";
@@ -9,12 +9,12 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { ImageUploadField } from "@/components/ui/ImageUploadField";
 import { DeleteConfirmModal } from "@/components/ui/DeleteConfirmModal";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useAdminCms } from "@/hooks/useAdminCms";
 
 export default function AdminCategoriesPage() {
   const router = useRouter();
   const toast = useToast();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { categories, isLoading, invalidate } = useAdminCms();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -23,27 +23,6 @@ export default function AdminCategoriesPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const loadCategories = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/admin/cms");
-      if (res.status === 401) {
-        router.push("/admin/login");
-        return;
-      }
-      const data = await res.json();
-      setCategories(data.categories || []);
-    } catch {
-      toast.error("Load Error", "Could not load categories.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router, toast]);
-
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
 
   const openCreate = () => {
     setEditingCat({
@@ -89,7 +68,7 @@ export default function AdminCategoriesPage() {
 
       toast.success("Category Saved", `"${data.category.name}" updated.`);
       setIsModalOpen(false);
-      loadCategories();
+      await invalidate();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to save category.";
       toast.error("Save Error", msg);
@@ -114,7 +93,7 @@ export default function AdminCategoriesPage() {
       if (!res.ok) throw new Error("Failed to delete category.");
       toast.success("Category Deleted", `"${deleteTarget.name}" removed.`);
       setDeleteTarget(null);
-      loadCategories();
+      await invalidate();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Delete failed.";
       toast.error("Delete Error", msg);

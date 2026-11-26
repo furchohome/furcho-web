@@ -11,6 +11,7 @@ import {
   Order,
   OrderStatus,
   Product,
+  ProductReview,
   Quotation,
   SiteSettings,
   StoreSectionCode,
@@ -288,6 +289,69 @@ export async function deleteProductById(id: string): Promise<boolean> {
   if (error) {
     throw new Error(`Failed to delete product from Supabase: ${error.message}`);
   }
+  return true;
+}
+
+export async function addProductReview(
+  productId: string,
+  reviewInput: {
+    author_name: string;
+    district?: string;
+    rating: number;
+    comment: string;
+  }
+): Promise<ProductReview> {
+  const supabase = getSupabaseClient();
+  const product = await getProductById(productId);
+  if (!product) {
+    throw new Error("Product not found");
+  }
+
+  const newReview: ProductReview = {
+    id: `rev-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    author_name: reviewInput.author_name.trim(),
+    district: reviewInput.district ? reviewInput.district.trim() : undefined,
+    rating: Math.max(1, Math.min(5, Math.round(reviewInput.rating))),
+    comment: reviewInput.comment.trim(),
+    verified_buyer: true,
+    created_at: new Date().toISOString(),
+  };
+
+  const updatedReviews = [newReview, ...(product.reviews || [])];
+
+  const { error } = await supabase
+    .from("products")
+    .update({ reviews: updatedReviews, updated_at: new Date().toISOString() })
+    .eq("id", productId);
+
+  if (error) {
+    throw new Error(`Failed to add review: ${error.message}`);
+  }
+
+  return newReview;
+}
+
+export async function deleteProductReview(
+  productId: string,
+  reviewId: string
+): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  const product = await getProductById(productId);
+  if (!product) {
+    throw new Error("Product not found");
+  }
+
+  const updatedReviews = (product.reviews || []).filter((r) => r.id !== reviewId);
+
+  const { error } = await supabase
+    .from("products")
+    .update({ reviews: updatedReviews, updated_at: new Date().toISOString() })
+    .eq("id", productId);
+
+  if (error) {
+    throw new Error(`Failed to delete review: ${error.message}`);
+  }
+
   return true;
 }
 

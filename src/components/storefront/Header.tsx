@@ -86,23 +86,48 @@ export function Header({ settings, variant = "EVERYDAY" }: HeaderProps) {
   useEffect(() => {
     const updateHeaderHeight = () => {
       if (headerRef.current) {
-        setHeaderHeight(headerRef.current.offsetHeight);
+        const rect = headerRef.current.getBoundingClientRect();
+        const effectiveHeight = rect.bottom > 0 ? rect.bottom : headerRef.current.offsetHeight;
+        setHeaderHeight(effectiveHeight);
       }
     };
     updateHeaderHeight();
     window.addEventListener("resize", updateHeaderHeight);
     return () => window.removeEventListener("resize", updateHeaderHeight);
-  }, [settings.announcement_enabled, searchOpen]);
+  }, [settings.announcement_enabled, searchOpen, mobileMenuOpen]);
 
-  // Lock body scroll when mobile menu is open
+  // Lock root & body scroll when mobile menu is open to prevent background scrolling
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (!mobileMenuOpen) return;
+
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+    const originalBodyOverscroll = document.body.style.overscrollBehavior;
+
+    // Lock both root and body
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+    document.body.style.overscrollBehavior = "none";
+
+    // Prevent background touch scrolling on mobile touch screens
+    const handleTouchMove = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.("[data-mobile-drawer]")) {
+        return; // Allow scrolling inside the mobile navigation drawer
+      }
+      e.preventDefault();
+    };
+
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overscrollBehavior = originalHtmlOverscroll;
+      document.body.style.overscrollBehavior = originalBodyOverscroll;
+      document.removeEventListener("touchmove", handleTouchMove);
     };
   }, [mobileMenuOpen]);
 
@@ -177,20 +202,12 @@ export function Header({ settings, variant = "EVERYDAY" }: HeaderProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href={isPremiumMode ? "/premium" : "/"} className="flex items-center gap-2.5 group">
-            <div
-              className={`flex items-center justify-center w-11 h-11 rounded-xl border transition p-1 ${
-                isPremiumMode
-                  ? "bg-[#3B2418] border-[#C58B45]/50"
-                  : "bg-[#EFE3D4]/80 border-[#C58B45]/40"
-              }`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logo.png"
-                alt="FURCHO Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="FURCHO Logo"
+              className="w-10 h-10 object-contain shrink-0"
+            />
             <div className="flex flex-col">
               <div className="flex items-start">
                 <span
@@ -392,8 +409,9 @@ export function Header({ settings, variant = "EVERYDAY" }: HeaderProps) {
       {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
         <div
+          data-mobile-drawer="true"
           style={{ top: `${headerHeight}px`, height: `calc(100dvh - ${headerHeight}px)` }}
-          className="lg:hidden fixed inset-x-0 bottom-0 bg-[#FAF5ED] z-50 flex flex-col justify-between px-5 pt-4 pb-6 overflow-y-auto shadow-elevated"
+          className="lg:hidden fixed inset-x-0 bottom-0 bg-[#FAF5ED] z-50 flex flex-col justify-between px-5 pt-4 pb-6 overflow-y-auto overscroll-contain touch-pan-y shadow-elevated"
         >
           {/* Top Links Section */}
           <div className="space-y-4">

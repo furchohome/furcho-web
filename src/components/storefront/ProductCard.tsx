@@ -31,6 +31,13 @@ export function ProductCard({ product, variant = "EVERYDAY" }: ProductCardProps)
         )
       : null;
 
+  const isDemoLabel =
+    Boolean(product.launch_price_label) &&
+    (product.launch_price_label!.toLowerCase().includes("demo") ||
+      product.launch_price_label!.toLowerCase().includes("test"));
+
+  const displayLaunchLabel = !isDemoLabel ? product.launch_price_label : null;
+
   const handleQuickOrder = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -58,9 +65,9 @@ export function ProductCard({ product, variant = "EVERYDAY" }: ProductCardProps)
           <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-[10px] font-extrabold text-white shadow-2xs">
             {discountPercent}% OFF
           </span>
-        ) : product.launch_price_label ? (
+        ) : displayLaunchLabel ? (
           <span className="rounded-full bg-[#8D4F23] px-2 py-0.5 text-[10px] font-extrabold text-white shadow-2xs">
-            {product.launch_price_label}
+            {displayLaunchLabel}
           </span>
         ) : null}
 

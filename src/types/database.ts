@@ -75,7 +75,7 @@ export interface ProductVariant {
 export interface ProductReview {
   id: string;
   author_name: string;
-  district: string;
+  district?: string;
   rating: number;
   comment: string;
   verified_buyer: boolean;
