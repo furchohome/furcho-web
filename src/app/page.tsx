@@ -30,6 +30,18 @@ export default async function HomePage() {
 
   const heroBanners = allBanners.filter((b) => b.placement === "HERO" && b.store_section === "EVERYDAY");
 
+  const premiumPromoBanner = allBanners.find(
+    (b) => (b.placement === "PREMIUM_PROMO" || b.id === "ban-premium-promo") && b.is_active !== false
+  );
+
+  const customPromoBanner = allBanners.find(
+    (b) => (b.placement === "CUSTOM_PROMO" || b.id === "ban-custom-design") && b.is_active !== false
+  );
+
+  const commercialPromoBanner = allBanners.find(
+    (b) => (b.placement === "COMMERCIAL_PROMO" || b.id === "ban-commercial-promo") && b.is_active !== false
+  );
+
   const featuredProduct =
     everydayProducts.find((p) => p.slug === settings.featured_product_slug) ||
     everydayProducts.find((p) => p.is_featured) ||
@@ -124,18 +136,19 @@ export default async function HomePage() {
                 <div className="flex items-center gap-2.5">
                   <Crown className="w-7 h-7 text-[#C58B45]" />
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                    Premium Living
+                    {premiumPromoBanner?.title || "Premium Living"}
                   </h2>
                 </div>
                 <p className="text-sm sm:text-base text-[#EFE3D4] leading-relaxed">
-                  Crafted wooden furniture for refined homes, restaurants and commercial spaces.
+                  {premiumPromoBanner?.subtitle ||
+                    "Crafted wooden furniture for refined homes, restaurants and commercial spaces."}
                 </p>
                 <div className="pt-2">
                   <Link
-                    href="/premium"
+                    href={premiumPromoBanner?.cta_primary_link || "/premium"}
                     className="inline-flex items-center gap-2 rounded-full bg-[#FAF5ED] px-6 py-2.5 text-xs sm:text-sm font-extrabold text-[#3B2418] hover:bg-[#C58B45] hover:text-[#24150E] transition shadow-soft"
                   >
-                    <span>Explore Premium Collection</span>
+                    <span>{premiumPromoBanner?.cta_primary_text || "Explore Premium Collection"}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -145,8 +158,12 @@ export default async function HomePage() {
               <div className="lg:col-span-7 h-56 sm:h-64 lg:h-72 w-full overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/images/banners/premium-dining-hero.jpg"
-                  alt="Furcho Premium Living Dining Furniture"
+                  src={
+                    premiumPromoBanner?.image_url ||
+                    premiumPromoBanner?.mobile_image_url ||
+                    "/images/banners/premium-dining-hero.jpg"
+                  }
+                  alt={premiumPromoBanner?.title || "Furcho Premium Living Dining Furniture"}
                   className="h-full w-full object-cover object-center"
                 />
               </div>
@@ -209,18 +226,18 @@ export default async function HomePage() {
             <div className="relative overflow-hidden rounded-3xl bg-[#F3E9DC] border border-[#E4D3BE] shadow-soft flex flex-col sm:flex-row items-center justify-between">
               <div className="p-6 sm:p-8 space-y-3 flex-1">
                 <h3 className="text-xl sm:text-2xl font-extrabold text-[#29221D]">
-                  Need a Custom Design?
+                  {customPromoBanner?.title || "Need a Custom Design?"}
                 </h3>
                 <p className="text-xs sm:text-sm text-[#5A4638] leading-relaxed">
-                  Get furniture built for your space, style and needs.
+                  {customPromoBanner?.subtitle || "Get furniture built for your space, style and needs."}
                 </p>
                 <div className="pt-2">
                   <Link
-                    href="/premium/custom-enquiry?section=EVERYDAY"
+                    href={customPromoBanner?.cta_primary_link || "/premium/custom-enquiry?section=EVERYDAY"}
                     className="inline-flex items-center gap-2 rounded-full bg-[#8D4F23] px-5 py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-[#633719] transition shadow-2xs"
                   >
                     <Wrench className="w-3.5 h-3.5" />
-                    <span>Send a Custom Enquiry</span>
+                    <span>{customPromoBanner?.cta_primary_text || "Send a Custom Enquiry"}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -228,8 +245,8 @@ export default async function HomePage() {
               <div className="w-full sm:w-52 h-44 sm:h-full shrink-0 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/images/banners/custom-design-bed.jpg"
-                  alt="Custom Design Furniture"
+                  src={customPromoBanner?.image_url || "/images/banners/custom-design-bed.jpg"}
+                  alt={customPromoBanner?.title || "Custom Design Furniture"}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -244,19 +261,23 @@ export default async function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-lg sm:text-xl font-extrabold text-[#29221D]">
-                      For Restaurants &amp; Commercial Spaces
+                      {commercialPromoBanner?.title || "For Restaurants & Commercial Spaces"}
                     </h3>
                     <p className="text-xs sm:text-sm text-[#5A4638] leading-relaxed mt-1">
-                      Premium furniture solutions for cafés, restaurants, offices and more.
+                      {commercialPromoBanner?.subtitle ||
+                        "Premium furniture solutions for cafés, restaurants, offices and more."}
                     </p>
                   </div>
                 </div>
                 <div className="pt-2">
                   <Link
-                    href="/premium/custom-enquiry?section=PREMIUM&category=Restaurant+%26+Commercial+Furniture"
+                    href={
+                      commercialPromoBanner?.cta_primary_link ||
+                      "/premium/custom-enquiry?section=PREMIUM&category=Restaurant+%26+Commercial+Furniture"
+                    }
                     className="inline-flex items-center gap-2 rounded-full bg-[#633719] px-5 py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-[#3B2418] transition shadow-2xs"
                   >
-                    <span>Get a Project Quote</span>
+                    <span>{commercialPromoBanner?.cta_primary_text || "Get a Project Quote"}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -264,8 +285,8 @@ export default async function HomePage() {
               <div className="w-full sm:w-52 h-44 sm:h-full shrink-0 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/images/banners/commercial-restaurant.jpg"
-                  alt="Restaurants & Commercial Spaces Furniture"
+                  src={commercialPromoBanner?.image_url || "/images/banners/commercial-restaurant.jpg"}
+                  alt={commercialPromoBanner?.title || "Restaurants & Commercial Spaces Furniture"}
                   className="w-full h-full object-cover"
                 />
               </div>

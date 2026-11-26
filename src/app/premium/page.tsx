@@ -10,7 +10,7 @@ import {
   Hammer,
   Sparkles,
 } from "lucide-react";
-import { getCategories, getProducts, getSiteSettings } from "@/lib/db";
+import { getBanners, getCategories, getProducts, getSiteSettings } from "@/lib/db";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -24,11 +24,29 @@ export const metadata: Metadata = {
 };
 
 export default async function PremiumHomePage() {
-  const [settings, premiumCategories, premiumProducts] = await Promise.all([
+  const [settings, premiumCategories, premiumProducts, allBanners] = await Promise.all([
     getSiteSettings(),
     getCategories("PREMIUM"),
     getProducts({ section: "PREMIUM" }),
+    getBanners(),
   ]);
+
+  const commercialBanner = allBanners.find(
+    (b) => (b.placement === "COMMERCIAL_PROMO" || b.id === "ban-commercial-promo") && b.is_active !== false
+  );
+
+  const premiumHeroBanner = allBanners.find(
+    (b) => (b.placement === "HERO" && b.store_section === "PREMIUM") || b.placement === "PREMIUM_PROMO"
+  );
+
+  const signatureProduct =
+    premiumProducts.find((p) => p.slug === "malabar-heritage-6-seater-dining-collection") ||
+    premiumProducts[0];
+
+  const premiumHeroImage =
+    premiumHeroBanner?.image_url ||
+    signatureProduct?.images?.[0]?.image_url ||
+    "/images/banners/premium-dining-hero.jpg";
 
   const getPremiumRoute = (slug: string) => {
     if (slug.includes("bedroom")) return "/premium/bedroom";
@@ -83,8 +101,8 @@ export default async function PremiumHomePage() {
               <div className="relative overflow-hidden rounded-3xl border border-[#C58B45]/40 shadow-elevated bg-[#1A0F0A]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/images/banners/premium-dining-hero.jpg"
-                  alt="Furcho Premium Solid Wood Dining Collection"
+                  src={premiumHeroImage}
+                  alt={premiumHeroBanner?.title || signatureProduct?.name || "Furcho Premium Solid Wood Dining Collection"}
                   className="w-full h-[340px] sm:h-[420px] object-cover"
                 />
                 <div className="bg-[#1A0F0A]/90 backdrop-blur-md p-4 sm:p-5 border-t border-[#C58B45]/25 flex items-center justify-between gap-4">
@@ -246,8 +264,8 @@ export default async function PremiumHomePage() {
                 <div className="overflow-hidden rounded-2xl border border-[#C58B45]/40 shadow-card">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/images/banners/commercial-restaurant.jpg"
-                    alt="Furcho Hospitality & Restaurant Furniture"
+                    src={commercialBanner?.image_url || "/images/banners/commercial-restaurant.jpg"}
+                    alt={commercialBanner?.title || "Furcho Hospitality & Restaurant Furniture"}
                     className="w-full h-72 object-cover"
                   />
                 </div>

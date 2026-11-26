@@ -3,14 +3,14 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, Mail, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Lock, Mail, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const toast = useToast();
-  const [email, setEmail] = useState("admin@furcho.in");
-  const [password, setPassword] = useState("FurchoAdmin@2026");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -55,7 +55,7 @@ export default function AdminLoginPage() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-[#29221D] mb-1.5">
-              Administrator Email
+              Username / Email
             </label>
             <div className="relative flex items-center">
               <Mail className="w-4 h-4 text-[#6E5D52] absolute left-3.5" />
@@ -64,7 +64,9 @@ export default function AdminLoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-[#D8C7B4] bg-white pl-10 pr-4 py-2.5 text-sm text-[#29221D] focus:border-[#633719] focus:outline-none"
+                placeholder="Username"
+                autoComplete="username"
+                className="w-full rounded-xl border border-[#D8C7B4] bg-white pl-10 pr-4 py-2.5 text-sm text-[#29221D] placeholder:text-[#A8988B] focus:border-[#633719] focus:outline-none"
               />
             </div>
           </div>
@@ -80,20 +82,11 @@ export default function AdminLoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-[#D8C7B4] bg-white pl-10 pr-4 py-2.5 text-sm text-[#29221D] focus:border-[#633719] focus:outline-none"
+                placeholder="Password"
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-[#D8C7B4] bg-white pl-10 pr-4 py-2.5 text-sm text-[#29221D] placeholder:text-[#A8988B] focus:border-[#633719] focus:outline-none"
               />
             </div>
-          </div>
-
-          <div className="rounded-xl bg-[#EFE3D4]/70 border border-[#DECAB2] p-3 text-xs text-[#4B2913] space-y-1">
-            <p className="font-bold flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#633719]" />
-              Configured Admin Access
-            </p>
-            <p>
-              Default Email: <code className="font-bold">admin@furcho.in</code> | Password:{" "}
-              <code className="font-bold">FurchoAdmin@2026</code> (or your Supabase Auth admin user).
-            </p>
           </div>
 
           <button
